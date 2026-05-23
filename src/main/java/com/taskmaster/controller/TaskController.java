@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.http.HttpStatus;
+import jakarta.validation.Valid;
+import com.taskmaster.exception.ResourceNotFoundException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,7 +36,7 @@ public class TaskController {
     }
 
     @PostMapping
-    public ResponseEntity<TaskResponse> createTask(@RequestBody TaskRequest taskRequest) {
+    public ResponseEntity<TaskResponse> createTask(@Valid @RequestBody TaskRequest taskRequest) {
         Task task = Task.builder()
                 .name(taskRequest.name())
                 .description(taskRequest.description())
@@ -58,7 +60,7 @@ public class TaskController {
         return taskService.findById(id)
                 .map(this::mapToResponse)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());   
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
     }
 
     @DeleteMapping("/{id}")
