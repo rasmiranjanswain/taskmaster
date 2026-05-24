@@ -2,6 +2,7 @@ package com.taskmaster.exception;
 
 import com.taskmaster.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -44,6 +45,31 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining(", "));
                 
         logger.warn("Validation failed: {}", errorMessage);
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                errorMessage,
+                request.getRequestURI()
+        );
+        
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraintViolationException(
+            ConstraintViolationException ex, HttpServletRequest request) {
+        
+        String errorMessage = ex.getConstraintViolations().stream()
+                .map(violation -> {
+                    String path = violation.getPropertyPath().toString();
+                    String field = path.contains(".") ? path.substring(path.lastIndexOf('.') + 1) : path;
+                    return field + ": " + violation.getMessage();
+                })
+                .collect(Collectors.joining(", "));
+                
+        logger.warn("Constraint violation: {}", errorMessage);
 
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),

@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import com.taskmaster.exception.ResourceNotFoundException;
 
 import java.util.List;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/tasks")
+@Validated
 public class TaskController {
 
     private final TaskService taskService;
@@ -56,7 +59,7 @@ public class TaskController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TaskResponse> getTaskById(@PathVariable Long id) {
+    public ResponseEntity<TaskResponse> getTaskById(@PathVariable @Positive(message = "Task ID must be greater than zero") Long id) {
         return taskService.findById(id)
                 .map(this::mapToResponse)
                 .map(ResponseEntity::ok)
@@ -64,7 +67,7 @@ public class TaskController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteTask(@PathVariable @Positive(message = "Task ID must be greater than zero") Long id) {
         taskService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
